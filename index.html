@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTerm - Neural Terminal Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #00ff41;
+            --secondary-cyan: #00ffff;
+            --accent-purple: #ff00ff;
+            --warning-orange: #ff8c00;
+            --error-red: #ff073a;
+            --bg-dark: #0a0a0a;
+            --bg-darker: #050505;
+            --terminal-bg: rgba(0, 0, 0, 0.95);
+            --grid-color: rgba(0, 255, 65, 0.1);
+            --scan-line: rgba(0, 255, 65, 0.03);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--primary-green);
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+
+        /* Cyberpunk Background */
+        .cyber-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            background: 
+                linear-gradient(45deg, #0a0a0a 0%, #1a0033 25%, #001a33 50%, #0a1a0a 75%, #0a0a0a 100%);
+            background-size: 400% 400%;
+            animation: bgShift 12s ease infinite;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(
+                transparent 50%, 
+                var(--scan-line) 50%, 
+                var(--scan-line) 51%, 
+                transparent 51%
+            );
+            background-size: 100% 4px;
+            animation: scanLines 0.1s linear infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes scanLines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* Glitch Effects */
+        .glitch {
+            position: relative;
+            animation: glitch-text 3s infinite;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            animation: glitch-anim-1 0.3s infinite linear alternate-reverse;
+            color: var(--secondary-cyan);
+            z-index: -1;
+        }
+
+        .glitch::after {
+            animation: glitch-anim-2 0.3s infinite linear alternate-reverse;
+            color: var(--accent-purple);
+            z-index: -2;
+        }
+
+        @keyframes glitch-text {
+            0%, 90%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(40% 0 61% 0); }
+            20% { clip-path: inset(92% 0 1% 0); }
+            40% { clip-path: inset(43% 0 1% 0); }
+            60% { clip-path: inset(25% 0 58% 0); }
+            80% { clip-path: inset(54% 0 7% 0); }
+            100% { clip-path: inset(58% 0 43% 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(25% 0 58% 0); }
+            20% { clip-path: inset(6% 0 16% 0); }
+            40% { clip-path: inset(86% 0 4% 0); }
+            60% { clip-path: inset(40% 0 71% 0); }
+            80% { clip-path: inset(52% 0 5% 0); }
+            100% { clip-path: inset(70% 0 27% 0); }
+        }
+
+        /* Terminal Header */
+        .terminal-header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            background: var(--terminal-bg);
+            border-bottom: 2px solid var(--primary-green);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+            margin-right: 2rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .dot.red { background: var(--error-red); color: var(--error-red); }
+        .dot.yellow { background: var(--warning-orange); color: var(--warning-orange); }
+        .dot.green { background: var(--primary-green); color: var(--primary-green); }
+
+        .terminal-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--primary-green);
+            flex: 1;
+        }
+
+        .system-info {
+            font-size: 0.8rem;
+            color: var(--secondary-cyan);
+            display: flex;
+            gap: 2rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Navigation */
+        .nav-menu {
+            position: fixed;
+            top: 60px;
+            right: 2rem;
+            background: var(--terminal-bg);
+            border: 1px solid var(--primary-green);
+            border-radius: 0 0 10px 10px;
+            padding: 1rem;
+            z-index: 999;
+            box-shadow: 0 10px 30px rgba(0, 255, 65, 0.2);
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: var(--primary-green);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu a:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        /* Main Content */
+        .content {
+            margin-top: 120px;
+            min-height: 100vh;
+        }
+
+        /* Hero Terminal */
+        .hero-terminal {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .terminal-window {
+            background: var(--terminal-bg);
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 
+                0 0 50px rgba(0, 255, 65, 0.3),
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+
+        .terminal-window::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 65, 0.02) 2px,
+                    rgba(0, 255, 65, 0.02) 4px
+                );
+            pointer-events: none;
+        }
+
+        .terminal-header-bar {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 1rem;
+            border-bottom: 1px solid var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .terminal-body {
+            padding: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            min-height: 500px;
+        }
+
+        .prompt-line {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+        }
+
+        .prompt {
+            color: var(--secondary-cyan);
+            margin-right: 1rem;
+            font-weight: 600;
+        }
+
+        .command {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .output {
+            margin-left: 2rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .output.success { color: var(--primary-green); }
+        .output.warning { color: var(--warning-orange); }
+        .output.error { color: var(--error-red); }
+        .output.info { color: var(--secondary-cyan); }
+
+        .cursor {
+            background: var(--primary-green);
+            width: 10px;
+            height: 20px;
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Hero Content */
+        .hero-content {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-shadow: 
+                0 0 20px var(--primary-green),
+                0 0 40px var(--primary-green),
+                0 0 60px var(--primary-green);
+            animation: title-glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes title-glow {
+            from { text-shadow: 0 0 20px var(--primary-green), 0 0 40px var(--primary-green); }
+            to { text-shadow: 0 0 30px var(--primary-green), 0 0 60px var(--primary-green), 0 0 80px var(--primary-green); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--secondary-cyan);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: #cccccc;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+        }
+
+        /* Command Buttons */
+        .command-buttons {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 3rem 0;
+        }
+
+        .cmd-button {
+            background: var(--terminal-bg);
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 1rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cmd-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cmd-button:hover {
+            box-shadow: 
+                0 0 30px rgba(0, 255, 65, 0.5),
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .cmd-button:hover::before {
+            left: 100%;
+        }
+
+        .cmd-button.primary {
+            background: var(--primary-green);
+            color: var(--bg-dark);
+            border-color: var(--primary-green);
+        }
+
+        .cmd-button.secondary {
+            border-color: var(--secondary-cyan);
+            color: var(--secondary-cyan);
+        }
+
+        /* Features Matrix */
+        .features-matrix {
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .matrix-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .matrix-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 0 20px var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-terminal {
+            background: var(--terminal-bg);
+            border: 1px solid var(--primary-green);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-terminal:hover {
+            border-color: var(--secondary-cyan);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .feature-header {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 1rem;
+            border-bottom: 1px solid var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: var(--secondary-cyan);
+        }
+
+        .feature-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary-green);
+        }
+
+        .feature-body {
+            padding: 1.5rem;
+        }
+
+        .feature-description {
+            color: #cccccc;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .feature-demo {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            font-size: 0.9rem;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            background: var(--terminal-bg);
+            border: 2px solid var(--secondary-cyan);
+            margin: 4rem 2rem;
+            padding: 3rem;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            padding: 2rem;
+            border-radius: 8px;
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 0 20px var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--secondary-cyan);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Installation Terminal */
+        .install-section {
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .install-terminal {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--terminal-bg);
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(0, 255, 65, 0.3);
+        }
+
+        .install-header {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 1rem;
+            border-bottom: 1px solid var(--primary-green);
+            text-align: left;
+        }
+
+        .install-body {
+            padding: 2rem;
+            text-align: left;
+        }
+
+        .install-command {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-green);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            color: var(--primary-green);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .install-command:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            background: var(--primary-green);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-darker);
+            border-top: 2px solid var(--primary-green);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 0 20px var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        /* Mobile-First Responsive Design */
+        @media (max-width: 768px) {
+            /* Mobile Header */
+            .terminal-header {
+                height: 50px;
+                padding: 0 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .terminal-title {
+                font-size: 0.9rem;
+                overflow: hidden;
+                white-space: nowrap;
+                flex: 1;
+                margin: 0 1rem;
+            }
+            
+            .system-info {
+                display: none;
+            }
+            
+            /* Mobile Navigation */
+            .nav-menu {
+                top: 50px;
+                right: 1rem;
+                left: 1rem;
+                padding: 1rem;
+                border-radius: 0 0 15px 15px;
+            }
+            
+            .nav-menu ul {
+                flex-direction: column;
+                gap: 0.8rem;
+                text-align: center;
+            }
+            
+            .nav-menu a {
+                padding: 0.8rem 1rem;
+                border: 1px solid var(--primary-green);
+                border-radius: 8px;
+                background: rgba(0, 255, 65, 0.05);
+            }
+            
+            /* Mobile Content */
+            .content {
+                margin-top: 80px;
+            }
+            
+            /* Mobile Hero */
+            .hero-terminal {
+                padding: 1rem;
+            }
+            
+            .terminal-window {
+                border-radius: 15px;
+                overflow: hidden;
+            }
+            
+            .terminal-body {
+                padding: 1rem;
+                font-size: 0.9rem;
+                min-height: 300px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+            
+            .terminal-body::-webkit-scrollbar {
+                width: 8px;
+            }
+            
+            .terminal-body::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.5);
+            }
+            
+            .terminal-body::-webkit-scrollbar-thumb {
+                background: var(--primary-green);
+                border-radius: 4px;
+            }
+            
+            /* Mobile Hero Content */
+            .hero-title {
+                font-size: clamp(2.5rem, 12vw, 4rem);
+                margin-bottom: 1rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+                letter-spacing: 2px;
+            }
+            
+            .hero-description {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+            
+            /* Mobile Command Buttons */
+            .command-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .cmd-button {
+                width: 100%;
+                max-width: 300px;
+                padding: 1.2rem;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+            
+            /* Mobile Features */
+            .features-matrix {
+                padding: 3rem 1rem;
+            }
+            
+            .matrix-title {
+                font-size: 2rem;
+            }
+            
+            .matrix-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .feature-terminal {
+                border-radius: 12px;
+            }
+            
+            .feature-body {
+                padding: 1rem;
+            }
+            
+            .feature-demo {
+                font-size: 0.8rem;
+                padding: 0.8rem;
+                overflow-x: auto;
+            }
+            
+            .feature-demo::-webkit-scrollbar {
+                height: 4px;
+            }
+            
+            .feature-demo::-webkit-scrollbar-thumb {
+                background: var(--primary-green);
+                border-radius: 2px;
+            }
+            
+            /* Mobile Stats */
+            .stats-panel {
+                margin: 2rem 1rem;
+                padding: 2rem 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+            
+            .stat-item {
+                padding: 1.5rem 1rem;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.9rem;
+            }
+            
+            /* Mobile Installation */
+            .install-section {
+                padding: 3rem 1rem;
+            }
+            
+            .install-terminal {
+                margin: 0 auto;
+                border-radius: 15px;
+            }
+            
+            .install-body {
+                padding: 1rem;
+            }
+            
+            .install-command {
+                font-size: 1rem;
+                padding: 1rem;
+                border-radius: 8px;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .copy-button {
+                position: sticky;
+                right: 1rem;
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+            
+            /* Mobile Footer */
+            .footer {
+                padding: 2rem 1rem;
+            }
+            
+            .footer-logo {
+                font-size: 1.5rem;
+            }
+            
+            .footer p {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Touch Device Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            /* Remove hover effects on touch devices */
+            .feature-terminal:hover {
+                transform: none;
+                box-shadow: 0 5px 20px rgba(0, 255, 255, 0.1);
+            }
+            
+            .cmd-button:hover {
+                transform: none;
+            }
+            
+            .nav-menu a:hover {
+                transform: none;
+            }
+            
+            /* Add touch feedback */
+            .cmd-button:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            .feature-terminal:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            .copy-button:active {
+                transform: scale(0.95);
+            }
+        }
+        
+        /* Extra Small Devices */
+        @media (max-width: 480px) {
+            .terminal-header {
+                height: 45px;
+                padding: 0 0.8rem;
+            }
+            
+            .terminal-title {
+                font-size: 0.8rem;
+            }
+            
+            .hero-title {
+                font-size: clamp(2rem, 15vw, 3rem);
+            }
+            
+            .hero-subtitle {
+                font-size: 0.9rem;
+                letter-spacing: 1px;
+            }
+            
+            .terminal-body {
+                font-size: 0.8rem;
+                padding: 0.8rem;
+            }
+            
+            .matrix-title {
+                font-size: 1.8rem;
+            }
+            
+            .feature-demo {
+                font-size: 0.7rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .install-command {
+                font-size: 0.9rem;
+            }
+            
+            .mobile-menu-toggle {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.6rem;
+            }
+        }
+        
+        /* Mobile-specific terminal effects */
+        @media (max-width: 768px) {
+            .terminal-window::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    transparent 25%,
+                    rgba(0, 255, 65, 0.02) 25%,
+                    rgba(0, 255, 65, 0.02) 50%,
+                    transparent 50%,
+                    transparent 75%,
+                    rgba(0, 255, 65, 0.02) 75%
+                );
+                background-size: 20px 20px;
+                pointer-events: none;
+                animation: mobile-pattern 10s linear infinite;
+            }
+            
+            @keyframes mobile-pattern {
+                0% { transform: translate(0, 0); }
+                100% { transform: translate(20px, 20px); }
+            }
+        }
+        
+        /* Mobile touch ripple effect */
+        .touch-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .touch-ripple::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(0, 255, 65, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+        
+        .touch-ripple.active::before {
+            width: 200px;
+            height: 200px;
+        }
+        
+        /* Mobile performance optimizations */
+        @media (max-width: 768px) {
+            .hero-terminal,
+            .features-matrix,
+            .stats-panel,
+            .install-section {
+                will-change: transform;
+                transform: translateZ(0);
+            }
+            
+            /* Simplified animations for better mobile performance */
+            .fade-in {
+                transition: opacity 0.4s ease, transform 0.4s ease;
+            }
+            
+            /* Mobile-optimized glitch effect */
+            .mobile-glitch {
+                animation: mobile-glitch 0.2s ease-in-out;
+            }
+            
+            @keyframes mobile-glitch {
+                0%, 100% { transform: translate(0); }
+                25% { transform: translate(-1px, 1px); }
+                50% { transform: translate(1px, -1px); }
+                75% { transform: translate(-1px, -1px); }
+            }
+        }
+        
+        /* Mobile Matrix Rain Optimization */
+        @media (max-width: 768px) {
+            .matrix-character {
+                font-size: 12px;
+                animation-duration: 3s !important;
+            }
+        }
+        
+        /* Mobile Hamburger Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .nav-menu {
+                transform: translateY(-100%);
+                transition: transform 0.3s ease;
+                opacity: 0;
+                pointer-events: none;
+            }
+            
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        
+        /* Mobile-specific animations */
+        @media (max-width: 768px) {
+            .fade-in {
+                transform: translateY(20px);
+            }
+            
+            .glitch {
+                animation: none; /* Disable glitch on mobile for performance */
+            }
+            
+            /* Reduced motion for mobile performance */
+            @media (prefers-reduced-motion: reduce) {
+                .scan-lines,
+                .grid-overlay,
+                .matrix-character {
+                    animation: none;
+                }
+                
+                .cyber-bg {
+                    animation: none;
+                    background: linear-gradient(135deg, #0f0f23 0%, #1a0033 50%, #0f4c75 100%);
+                }
+            }
+        }
+        
+        /* Landscape mobile optimization */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .hero-terminal {
+                padding: 1rem;
+            }
+            
+            .terminal-body {
+                max-height: 250px;
+                font-size: 0.8rem;
+            }
+            
+            .hero-content {
+                padding: 2rem 1rem;
+            }
+            
+            .features-matrix {
+                padding: 2rem 1rem;
+            }
+        }
+        
+        /* Mobile loading states */
+        .mobile-loading {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-loading {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                border: 2px solid rgba(0, 255, 65, 0.3);
+                border-radius: 50%;
+                border-top-color: var(--primary-green);
+                animation: spin 1s ease-in-out infinite;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 65, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-green);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Matrix Rain Effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -4;
+            pointer-events: none;
+            opacity: 0.1;
+        }
+
+        .matrix-character {
+            position: absolute;
+            color: var(--primary-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            animation: matrix-fall linear infinite;
+        }
+
+        @keyframes matrix-fall {
+            from {
+                transform: translateY(-100vh);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cyber-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="scan-lines"></div>
+    <div class="matrix-rain" id="matrixRain"></div>
+
+    <!-- Terminal Header -->
+    <header class="terminal-header">
+        <div class="terminal-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+        </div>
+        <div class="terminal-title">NTERM://NEURAL_TERMINAL_INTERFACE</div>
+        <div class="system-info">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>ONLINE</span>
+            </div>
+            <div class="status-indicator">
+                <span>CPU: 12%</span>
+            </div>
+            <div class="status-indicator">
+                <span>MEM: 8.2GB</span>
+            </div>
+            <div class="status-indicator">
+                <span>AI: ACTIVE</span>
+            </div>
+        </div>
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            ≡ MENU
+        </button>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-menu" id="mobileNav">
+        <ul>
+            <li><a href="#features" onclick="closeMobileMenu()">FEATURES</a></li>
+            <li><a href="#install" onclick="closeMobileMenu()">INSTALL</a></li>
+            <li><a href="#docs" onclick="closeMobileMenu()">DOCS</a></li>
+            <li><a href="#github" onclick="closeMobileMenu()">GITHUB</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <!-- Hero Section -->
+        <section class="hero-terminal">
+            <div class="terminal-window">
+                <div class="terminal-header-bar">
+                    <div class="terminal-dots">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                    <span>nterm@neural-interface:~$</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span class="command">nterm --initialize</span>
+                    </div>
+                    <div class="output success">✓ Neural pathways established</div>
+                    <div class="output success">✓ AI reasoning engine loaded</div>
+                    <div class="output success">✓ System integration complete</div>
+                    <div class="output info">🧠 NTerm v2.0.1 - Neural Terminal Interface</div>
+                    
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span class="command">nterm "What's consuming my memory?"</span>
+                    </div>
+                    <div class="output">🔍 Analyzing memory consumption patterns...</div>
+                    <div class="output warning">⚠️  Chrome: 4.2GB (73 tabs open)</div>
+                    <div class="output info">📊 Docker: 1.8GB (6 containers)</div>
+                    <div class="output info">🔧 VSCode: 890MB (4 workspaces)</div>
+                    <div class="output success">💡 Recommendation: Close unused Chrome tabs, restart container 'redis-dev'</div>
+                    <div class="output">🤖 Would you like me to optimize memory usage automatically? [Y/n]</div>
+                    
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span class="command">nterm "Monitor my IoT devices"</span>
+                    </div>
+                    <div class="output">🌐 Scanning network for IoT devices...</div>
+                    <div class="output success">✓ Smart Thermostat (192.168.1.45) - 72°F, Normal</div>
+                    <div class="output warning">⚠️ Security Camera (192.168.1.67) - High CPU usage</div>
+                    <div class="output success">✓ Smart Lights (192.168.1.23-26) - All responsive</div>
+                    <div class="output error">❌ Garage Sensor (192.168.1.89) - Connection timeout</div>
+                    <div class="output">🔧 Running diagnostic on garage sensor...</div>
+                    
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span class="cursor"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hero Content -->
+        <section class="hero-content">
+            <h1 class="hero-title glitch" data-text="NTERM">NTERM</h1>
+            <p class="hero-subtitle">Neural Terminal Interface</p>
+            <p class="hero-description">
+                The next evolution of terminal interaction. NTerm combines GPT-powered AI reasoning 
+                with advanced system administration capabilities, creating an intelligent assistant 
+                that understands your environment and solves problems autonomously.
+            </p>
+            
+            <div class="command-buttons">
+                <a href="#install" class="cmd-button primary">INITIALIZE SYSTEM</a>
+                <a href="#features" class="cmd-button secondary">SCAN FEATURES</a>
+                <a href="#docs" class="cmd-button">ACCESS DOCS</a>
+            </div>
+        </section>
+
+        <!-- Features Matrix -->
+        <section class="features-matrix" id="features">
+            <div class="matrix-header">
+                <h2 class="matrix-title">SYSTEM CAPABILITIES</h2>
+                <p style="color: var(--secondary-cyan); font-size: 1.2rem;">Advanced neural processing modules</p>
+            </div>
+            
+            <div class="matrix-grid">
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">🧠</span>
+                        <span class="feature-title">AI REASONING ENGINE</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Advanced GPT integration with contextual understanding. 
+                            Analyzes complex system states and provides intelligent solutions.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm "Server is slow, diagnose"</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                🔍 Analyzing 47 system metrics...<br>
+                                💡 Found: High disk I/O on /var/log<br>
+                                🔧 Suggested: Log rotation + cleanup<br>
+                                ✅ Performance improved by 340%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">📱</span>
+                        <span class="feature-title">QR NEURAL LINK</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Revolutionary QR-based secure API key setup. 
+                            Scan with your device for instant neural interface configuration.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm --setup-key</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                📱 QR Code generated<br>
+                                🔐 Awaiting secure handshake...<br>
+                                ✅ Neural link established<br>
+                                🧠 AI capabilities: ONLINE
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">⚡</span>
+                        <span class="feature-title">REAL-TIME ANALYSIS</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Continuous system monitoring with predictive analytics. 
+                            Identifies issues before they become critical.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm --monitor</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                📊 Real-time metrics active<br>
+                                ⚠️ Memory usage trending up<br>
+                                🔮 Predicted issue in 23min<br>
+                                🛡️ Auto-mitigation ready
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">🌐</span>
+                        <span class="feature-title">IoT MESH CONTROL</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Native IoT device management with intelligent automation. 
+                            Control your entire smart infrastructure through AI commands.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm "Optimize energy usage"</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                🏠 Scanning 14 IoT devices...<br>
+                                💡 Dimming non-essential lights<br>
+                                🌡️ Adjusting thermostats<br>
+                                💰 Energy savings: 23%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">💾</span>
+                        <span class="feature-title">MEMORY CORE</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Persistent session memory with SQLite storage. 
+                            Learns from interactions and maintains context across sessions.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm "Remember my dev setup"</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                🧠 Learning environment...<br>
+                                📝 Stored: Docker configs<br>
+                                📝 Stored: Port mappings<br>
+                                ✅ Profile saved to memory core
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-terminal">
+                    <div class="feature-header">
+                        <span class="feature-icon">🛡️</span>
+                        <span class="feature-title">SECURITY MATRIX</span>
+                    </div>
+                    <div class="feature-body">
+                        <p class="feature-description">
+                            Enterprise-grade security with local data storage, 
+                            encrypted communications, and zero-trust architecture.
+                        </p>
+                        <div class="feature-demo">
+                            <div class="prompt-line">
+                                <span class="prompt">❯</span>
+                                <span style="color: var(--primary-green);">nterm --security-scan</span>
+                            </div>
+                            <div style="color: #ccc; margin-left: 1rem;">
+                                🔒 Scanning security posture...<br>
+                                ✅ All communications encrypted<br>
+                                ✅ Local data storage verified<br>
+                                🛡️ Zero vulnerabilities detected
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Panel -->
+        <section class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">10x</div>
+                    <div class="stat-label">Faster Diagnosis</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">85%</div>
+                    <div class="stat-label">Task Automation</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Neural Pathways</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">0ms</div>
+                    <div class="stat-label">Response Latency</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Section -->
+        <section class="install-section" id="install">
+            <h2 style="font-family: 'Orbitron', monospace; font-size: 3rem; color: var(--primary-green); text-shadow: 0 0 20px var(--primary-green); margin-bottom: 2rem;">
+                INITIALIZE NEURAL INTERFACE
+            </h2>
+            
+            <div class="install-terminal">
+                <div class="install-header">
+                    <div class="terminal-dots">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                    <span style="margin-left: 1rem; color: var(--primary-green);">installation_protocol.sh</span>
+                </div>
+                <div class="install-body">
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span style="color: #ccc;">// Install neural interface</span>
+                    </div>
+                    <div class="install-command">
+                        pip install nterm
+                        <button class="copy-button" onclick="copyToClipboard('pip install nterm')">COPY</button>
+                    </div>
+                    
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span style="color: #ccc;">// Initialize AI capabilities</span>
+                    </div>
+                    <div class="install-command">
+                        nterm --setup-key
+                        <button class="copy-button" onclick="copyToClipboard('nterm --setup-key')">COPY</button>
+                    </div>
+                    
+                    <div class="prompt-line">
+                        <span class="prompt">❯</span>
+                        <span style="color: #ccc;">// Begin neural interface session</span>
+                    </div>
+                    <div class="install-command">
+                        nterm
+                        <button class="copy-button" onclick="copyToClipboard('nterm')">COPY</button>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; color: var(--secondary-cyan);">
+                        <div class="loading"></div> Establishing neural pathways...
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">NTERM://NEURAL_INTERFACE</div>
+            <p style="color: #666; margin-top: 1rem;">
+                &copy; 2025 Neural Terminal Interface. Revolutionizing human-machine interaction.
+            </p>
+            <p style="color: var(--secondary-cyan); margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;">
+                SYSTEM STATUS: ONLINE | AI CORES: ACTIVE | NEURAL PATHWAYS: SYNCHRONIZED
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Functions
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileNav');
+            menu.classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileNav');
+            menu.classList.remove('active');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileNav');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Matrix Rain Effect (Mobile Optimized)
+        function createMatrixRain() {
+            const container = document.getElementById('matrixRain');
+            const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const isMobile = window.innerWidth <= 768;
+            const charCount = isMobile ? 25 : 50; // Fewer characters on mobile for performance
+            
+            // Clear existing characters
+            container.innerHTML = '';
+            
+            for (let i = 0; i < charCount; i++) {
+                const char = document.createElement('div');
+                char.className = 'matrix-character';
+                char.textContent = characters[Math.floor(Math.random() * characters.length)];
+                char.style.left = Math.random() * 100 + 'vw';
+                char.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                char.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(char);
+            }
+        }
+
+        // Mobile-optimized terminal typing animation
+        let terminalCommands = [
+            "nterm \"CPU usage?\"",
+            "nterm \"Find security issues\"", 
+            "nterm \"Deploy safely\"",
+            "nterm \"Monitor IoT\"",
+            "nterm \"Analyze traffic\""
+        ];
+        
+        let currentCommandIndex = 0;
+        let typingInterval;
+
+        function startTypingAnimation() {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Simplified animation for mobile
+                const commandElements = document.querySelectorAll('.command');
+                if (commandElements.length > 0) {
+                    setInterval(() => {
+                        currentCommandIndex = (currentCommandIndex + 1) % terminalCommands.length;
+                        commandElements.forEach((el, index) => {
+                            if (index === 1) { // Update the second command
+                                el.textContent = terminalCommands[currentCommandIndex];
+                            }
+                        });
+                    }, 4000);
+                }
+            }
+        }
+
+        // Copy to clipboard function (Mobile Optimized)
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback(event.target);
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(text, event.target);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text, event.target);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text, button) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopyFeedback(button);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showCopyFeedback(button) {
+            const originalText = button.textContent;
+            button.textContent = 'COPIED!';
+            button.style.background = 'var(--primary-green)';
+            button.style.color = 'var(--bg-dark)';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+                button.style.color = '';
+            }, 1500);
+        }
+
+        // Mobile touch interactions
+        function addMobileTouchEffects() {
+            const isMobile = 'ontouchstart' in window;
+            
+            if (isMobile) {
+                // Add touch ripple effect
+                const touchElements = document.querySelectorAll('.cmd-button, .feature-terminal, .copy-button');
+                
+                touchElements.forEach(element => {
+                    element.classList.add('touch-ripple');
+                    
+                    element.addEventListener('touchstart', function(e) {
+                        this.classList.add('active');
+                        this.style.transform = 'scale(0.98)';
+                        
+                        // Remove active class after animation
+                        setTimeout(() => {
+                            this.classList.remove('active');
+                        }, 300);
+                    });
+                    
+                    element.addEventListener('touchend', function() {
+                        setTimeout(() => {
+                            this.style.transform = '';
+                        }, 150);
+                    });
+                });
+                
+                // Add mobile-specific glitch effect for feature terminals
+                const featureTerminals = document.querySelectorAll('.feature-terminal');
+                featureTerminals.forEach(terminal => {
+                    terminal.addEventListener('touchstart', function() {
+                        this.classList.add('mobile-glitch');
+                        setTimeout(() => {
+                            this.classList.remove('mobile-glitch');
+                        }, 200);
+                    });
+                });
+                
+                // Haptic feedback simulation (if available)
+                if (navigator.vibrate) {
+                    touchElements.forEach(element => {
+                        element.addEventListener('touchstart', function() {
+                            navigator.vibrate(10); // Very short vibration
+                        });
+                    });
+                }
+            }
+        }
+
+        // Smooth scrolling for anchor links (Mobile Optimized)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerOffset = window.innerWidth <= 768 ? 80 : 120;
+                    const elementPosition = target.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Mobile performance optimizations
+        function optimizeForMobile() {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Reduce animation complexity on mobile
+                const scanLines = document.querySelector('.scan-lines');
+                if (scanLines && window.devicePixelRatio > 2) {
+                    scanLines.style.display = 'none'; // Hide scan lines on high-DPI mobile for performance
+                }
+                
+                // Reduce matrix rain frequency
+                const matrixChars = document.querySelectorAll('.matrix-character');
+                matrixChars.forEach((char, index) => {
+                    if (index % 2 === 0) {
+                        char.style.display = 'none';
+                    }
+                });
+                
+                // Add mobile scroll indicator
+                addMobileScrollIndicator();
+                
+                // Add pull-to-refresh feel (visual only)
+                addPullToRefreshVisual();
+            }
+        }
+        
+        // Mobile scroll indicator
+        function addMobileScrollIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'mobile-scroll-indicator';
+            indicator.innerHTML = '▼ SCROLL FOR MORE ▼';
+            indicator.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 255, 65, 0.1);
+                border: 1px solid var(--primary-green);
+                color: var(--primary-green);
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.8rem;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                animation: mobile-bounce 2s infinite;
+                pointer-events: none;
+            `;
+            
+            document.body.appendChild(indicator);
+            
+            // Hide after first scroll
+            let hasScrolled = false;
+            window.addEventListener('scroll', function() {
+                if (!hasScrolled && window.scrollY > 100) {
+                    hasScrolled = true;
+                    indicator.style.opacity = '0';
+                    setTimeout(() => {
+                        indicator.remove();
+                    }, 500);
+                }
+            });
+            
+            // Add bounce animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes mobile-bounce {
+                    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+                    40% { transform: translateX(-50%) translateY(-10px); }
+                    60% { transform: translateX(-50%) translateY(-5px); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Pull-to-refresh visual effect
+        function addPullToRefreshVisual() {
+            let touchStartY = 0;
+            let touchEndY = 0;
+            let isPulling = false;
+            
+            document.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', function(e) {
+                touchEndY = e.touches[0].clientY;
+                const pullDistance = touchEndY - touchStartY;
+                
+                if (pullDistance > 50 && window.scrollY === 0 && !isPulling) {
+                    isPulling = true;
+                    showPullRefreshIndicator();
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function() {
+                if (isPulling) {
+                    isPulling = false;
+                    hidePullRefreshIndicator();
+                }
+            }, { passive: true });
+        }
+        
+        function showPullRefreshIndicator() {
+            let indicator = document.querySelector('.pull-refresh-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'pull-refresh-indicator';
+                indicator.innerHTML = '⟳ NEURAL SYNC';
+                indicator.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--primary-green);
+                    color: var(--bg-dark);
+                    padding: 0.5rem 1rem;
+                    border-radius: 20px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    z-index: 1001;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                `;
+                document.body.appendChild(indicator);
+            }
+            indicator.style.opacity = '1';
+        }
+        
+        function hidePullRefreshIndicator() {
+            const indicator = document.querySelector('.pull-refresh-indicator');
+            if (indicator) {
+                indicator.style.opacity = '0';
+                setTimeout(() => {
+                    indicator.remove();
+                }, 300);
+            }
+        }
+
+        // Initialize effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show mobile loading screen
+            if (window.innerWidth <= 768) {
+                showMobileLoadingScreen();
+            }
+            
+            createMatrixRain();
+            startTypingAnimation();
+            addMobileTouchEffects();
+            optimizeForMobile();
+        });
+        
+        // Mobile loading screen
+        function showMobileLoadingScreen() {
+            const loadingScreen = document.createElement('div');
+            loadingScreen.className = 'mobile-loading-screen';
+            loadingScreen.innerHTML = `
+                <div class="mobile-loading-content">
+                    <div class="mobile-loading-logo">NTERM</div>
+                    <div class="mobile-loading-text">INITIALIZING NEURAL INTERFACE...</div>
+                    <div class="mobile-loading-bar">
+                        <div class="mobile-loading-progress"></div>
+                    </div>
+                </div>
+            `;
+            loadingScreen.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: var(--bg-dark);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 1;
+                transition: opacity 0.5s ease;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .mobile-loading-content {
+                    text-align: center;
+                    max-width: 300px;
+                    padding: 2rem;
+                }
+                
+                .mobile-loading-logo {
+                    font-family: 'Orbitron', monospace;
+                    font-size: 3rem;
+                    font-weight: 900;
+                    color: var(--primary-green);
+                    text-shadow: 0 0 20px var(--primary-green);
+                    margin-bottom: 2rem;
+                    animation: pulse-logo 2s infinite;
+                }
+                
+                .mobile-loading-text {
+                    font-family: 'JetBrains Mono', monospace;
+                    color: var(--secondary-cyan);
+                    font-size: 0.9rem;
+                    margin-bottom: 2rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                .mobile-loading-bar {
+                    width: 100%;
+                    height: 4px;
+                    background: rgba(0, 255, 65, 0.2);
+                    border-radius: 2px;
+                    overflow: hidden;
+                }
+                
+                .mobile-loading-progress {
+                    width: 0%;
+                    height: 100%;
+                    background: var(--primary-green);
+                    border-radius: 2px;
+                    animation: loading-progress 2s ease-in-out forwards;
+                }
+                
+                @keyframes pulse-logo {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.8; transform: scale(1.05); }
+                }
+                
+                @keyframes loading-progress {
+                    0% { width: 0%; }
+                    100% { width: 100%; }
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.appendChild(loadingScreen);
+            
+            // Hide loading screen after animation
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.remove();
+                }, 500);
+            }, 2500);
+        }
+        
+        // Handle window resize for responsive matrix rain
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                createMatrixRain();
+                optimizeForMobile();
+            }, 250);
+        });
+
+        // Mobile orientation change handling
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                createMatrixRain();
+                optimizeForMobile();
+            }, 500);
+        });
+
+        // Glitch effect on hover/touch
+        document.querySelectorAll('.feature-terminal').forEach(terminal => {
+            function triggerGlitch() {
+                if (window.innerWidth > 768) { // Only on desktop
+                    this.style.animation = 'glitch-text 0.3s ease-in-out';
+                }
+            }
+            
+            terminal.addEventListener('mouseenter', triggerGlitch);
+            terminal.addEventListener('touchstart', triggerGlitch);
+            
+            terminal.addEventListener('animationend', function() {
+                this.style.animation = '';
+            });
+        });
+
+        // Dynamic system info updates (Desktop only for performance)
+        function updateSystemInfo() {
+            if (window.innerWidth > 768) {
+                const cpuElement = document.querySelector('.system-info .status-indicator:nth-child(2) span');
+                const memElement = document.querySelector('.system-info .status-indicator:nth-child(3) span');
+                
+                if (cpuElement && memElement) {
+                    const cpu = Math.floor(Math.random() * 20 + 5);
+                    const mem = (Math.random() * 2 + 7).toFixed(1);
+                    
+                    cpuElement.textContent = `CPU: ${cpu}%`;
+                    memElement.textContent = `MEM: ${mem}GB`;
+                }
+            }
+        }
+
+        // Update system info every 3 seconds (desktop only)
+        if (window.innerWidth > 768) {
+            setInterval(updateSystemInfo, 3000);
+        }
+
+        // Scroll-based mobile optimizations
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Pause animations while scrolling on mobile for better performance
+                document.body.classList.add('scrolling');
+                
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(function() {
+                    document.body.classList.remove('scrolling');
+                }, 150);
+            }
+        });
+
+        // Add mobile scrolling performance CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @media (max-width: 768px) {
+                body.scrolling .matrix-character,
+                body.scrolling .scan-lines,
+                body.scrolling .grid-overlay {
+                    animation-play-state: paused;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
