@@ -952,7 +952,7 @@
 
                 <div class="hero-buttons">
                     <a href="#" class="btn btn-primary">Get Started Free</a>
-                    <a href="#" class="btn btn-secondary">Watch Demo</a>
+                    <a href="#" class="btn btn-secondary" id="watchDemoBtn">Watch Demo</a>
                 </div>
             </div>
             
@@ -1663,6 +1663,145 @@
             initMobileNav();
             initSmoothScrolling();
             enhanceTerminalForMobile();
+        });
+    </script>
+    
+    <!-- Video Modal -->
+    <div id="videoModal" class="video-modal">
+        <div class="video-modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-container">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/uzDV4eulI0c?enablejsapi=1&autoplay=1&mute=1" title="nterm Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Video Modal Styles */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .video-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 900px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: var(--accent-primary);
+            opacity: 1;
+            text-decoration: none;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        @media (max-width: 768px) {
+            .video-modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+
+    <script>
+        // Video Modal Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('videoModal');
+            const btn = document.getElementById('watchDemoBtn');
+            const closeBtn = document.querySelector('.close-modal');
+            const iframe = document.querySelector('.video-container iframe');
+            
+            // Open modal
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+                
+                // Force play the video when modal opens
+                const iframe = document.querySelector('.video-container iframe');
+                if (iframe) {
+                    // This is a workaround for autoplay policies
+                    const url = new URL(iframe.src);
+                    if (!url.searchParams.has('autoplay') || url.searchParams.get('autoplay') !== '1') {
+                        url.searchParams.set('autoplay', '1');
+                        url.searchParams.set('mute', '1');
+                        iframe.src = url.toString();
+                    }
+                }
+            });
+            
+            // Close modal
+            function closeModal() {
+                modal.classList.remove('show');
+                document.body.style.overflow = ''; // Re-enable scrolling
+                // Reset video when closing modal
+                const iframeSrc = iframe.src;
+                iframe.src = '';
+                setTimeout(() => { iframe.src = iframeSrc; }, 100);
+            }
+            
+            closeBtn.addEventListener('click', closeModal);
+            
+            // Close when clicking outside the modal content
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // Close with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    closeModal();
+                }
+            });
         });
     </script>
 </body>
