@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTerm - Neural Terminal Interface</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>nterm - AI-Powered Terminal That Thinks With You</title>
+
     <style>
         :root {
-            --primary-green: #00ff41;
-            --secondary-cyan: #00ffff;
-            --accent-purple: #ff00ff;
-            --warning-orange: #ff8c00;
-            --error-red: #ff073a;
-            --bg-dark: #0a0a0a;
-            --bg-darker: #050505;
-            --terminal-bg: rgba(0, 0, 0, 0.95);
-            --grid-color: rgba(0, 255, 65, 0.1);
-            --scan-line: rgba(0, 255, 65, 0.03);
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --accent-primary: #00ff88;
+            --accent-secondary: #00d4ff;
+            --accent-tertiary: #ff6b6b;
+            --text-primary: #ffffff;
+            --text-secondary: #b4bcd0;
+            --text-muted: #6b7280;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glow: 0 0 20px rgba(0, 255, 136, 0.3);
+            --terminal-bg: #0d1117;
+            --terminal-border: #21262d;
         }
 
         * {
@@ -26,197 +29,271 @@
         }
 
         body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg-dark);
-            color: var(--primary-green);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
             overflow-x: hidden;
-            cursor: crosshair;
         }
 
-        /* Cyberpunk Background */
-        .cyber-bg {
+        /* Background Effects */
+        body::before {
+            content: '';
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -3;
             background: 
-                linear-gradient(45deg, #0a0a0a 0%, #1a0033 25%, #001a33 50%, #0a1a0a 75%, #0a0a0a 100%);
-            background-size: 400% 400%;
-            animation: bgShift 12s ease infinite;
-        }
-
-        .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background-image: 
-                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-        }
-
-        .scan-lines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 107, 107, 0.05) 0%, transparent 50%);
             pointer-events: none;
-            background: linear-gradient(
-                transparent 50%, 
-                var(--scan-line) 50%, 
-                var(--scan-line) 51%, 
-                transparent 51%
-            );
-            background-size: 100% 4px;
-            animation: scanLines 0.1s linear infinite;
+            z-index: -1;
         }
 
-        @keyframes bgShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        @keyframes scanLines {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(4px); }
-        }
-
-        /* Fullscreen Terminal Section */
-        .fullscreen-terminal {
-            height: 100vh;
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
             width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-shadow: var(--glow);
+        }
+
+        /* Mobile Navigation */
+        .nav-toggle {
+            display: none;
             flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-toggle span {
+            width: 24px;
+            height: 2px;
+            background: var(--accent-primary);
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .nav-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .nav-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links.mobile {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            flex-direction: column;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .nav-links.mobile.active {
+            transform: translateX(0);
+        }
+
+        .nav-links.mobile a {
+            font-size: 1.2rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--glow);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 2rem 4rem;
+            position: relative;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .hero-feature::before {
+            content: "▶";
+            color: var(--accent-primary);
+            font-size: 0.8rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
             position: relative;
             overflow: hidden;
         }
 
-        /* Terminal Header */
-        .terminal-header {
-            height: 60px;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            box-shadow: var(--glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: var(--glow);
+        }
+
+        /* Terminal */
+        .terminal {
             background: var(--terminal-bg);
-            border-bottom: 2px solid var(--primary-green);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            padding: 0 2rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
-            flex-shrink: 0;
-        }
-
-        .terminal-dots {
-            display: flex;
-            gap: 8px;
-            margin-right: 2rem;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            box-shadow: 0 0 10px currentColor;
-        }
-
-        .dot.red { background: var(--error-red); color: var(--error-red); }
-        .dot.yellow { background: var(--warning-orange); color: var(--warning-orange); }
-        .dot.green { background: var(--primary-green); color: var(--primary-green); }
-
-        .terminal-title {
-            font-family: 'Orbitron', monospace;
-            font-weight: 700;
-            font-size: 1.2rem;
-            text-shadow: 0 0 10px var(--primary-green);
-            flex: 1;
-        }
-
-        .system-info {
-            font-size: 0.8rem;
-            color: var(--secondary-cyan);
-            display: flex;
-            gap: 2rem;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--primary-green);
-            animation: pulse-dot 2s infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        /* Navigation */
-        .nav-menu {
-            position: absolute;
-            top: 60px;
-            right: 2rem;
-            background: var(--terminal-bg);
-            border: 1px solid var(--primary-green);
-            border-radius: 0 0 10px 10px;
-            padding: 1rem;
-            z-index: 999;
-            box-shadow: 0 10px 30px rgba(0, 255, 65, 0.2);
-        }
-
-        .nav-menu ul {
-            list-style: none;
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-menu a {
-            color: var(--primary-green);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .nav-menu a:hover {
-            border-color: var(--primary-green);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
-            background: rgba(0, 255, 65, 0.1);
-        }
-
-        /* Main Terminal Body */
-        .terminal-main {
-            flex: 1;
-            background: var(--terminal-bg);
-            padding: 2rem;
-            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px var(--terminal-border),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            overflow: hidden;
             position: relative;
-            font-size: 1.1rem;
-            line-height: 1.8;
         }
 
-        .terminal-main::before {
+        .terminal::before {
             content: '';
             position: absolute;
             top: 0;
@@ -224,70 +301,544 @@
             right: 0;
             bottom: 0;
             background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(0, 255, 65, 0.02) 2px,
-                    rgba(0, 255, 65, 0.02) 4px
-                );
+                linear-gradient(45deg, transparent 30%, rgba(0, 255, 136, 0.02) 50%, transparent 70%);
             pointer-events: none;
         }
 
-        .terminal-main::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .terminal-main::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .terminal-main::-webkit-scrollbar-thumb {
-            background: var(--primary-green);
-            border-radius: 4px;
-        }
-
-        .prompt-line {
+        .terminal-header {
+            background: linear-gradient(135deg, #21262d, #161b22);
+            padding: 1rem;
             display: flex;
-            align-items: flex-start;
-            margin: 1rem 0;
-            opacity: 0;
-            animation: fadeInUp 0.5s ease forwards;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--terminal-border);
         }
 
-        .prompt {
-            color: var(--secondary-cyan);
-            margin-right: 1rem;
-            font-weight: 600;
-            flex-shrink: 0;
+        .terminal-dots {
+            display: flex;
+            gap: 0.5rem;
         }
 
-        .command {
-            color: var(--primary-green);
-            font-weight: 600;
-            flex: 1;
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }
 
-        .output {
-            margin-left: 2rem;
-            color: #ffffff;
+        .dot.red { background: #ff5f57; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #28ca42; }
+
+        .terminal-title {
+            margin-left: 1rem;
+            color: var(--text-muted);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            height: 500px;
+            overflow-y: auto;
+            background: var(--terminal-bg);
+        }
+
+        .terminal-line {
             margin-bottom: 0.5rem;
             opacity: 0;
-            animation: fadeInUp 0.5s ease forwards;
-            flex: 1;
+            animation: fadeIn 0.5s ease forwards;
         }
 
-        .output.success { color: var(--primary-green); }
-        .output.warning { color: var(--warning-orange); }
-        .output.error { color: var(--error-red); }
-        .output.info { color: var(--secondary-cyan); }
+        .prompt { color: var(--accent-primary); }
+        .user-input { color: var(--text-primary); }
+        .ai-thinking { color: #7c3aed; font-style: italic; }
+        .ai-planning { color: #f59e0b; }
+        .ai-executing { color: var(--accent-primary); }
+        .output { color: var(--text-muted); margin-left: 1rem; }
+        .success { color: var(--accent-primary); }
 
-        .cursor {
-            background: var(--primary-green);
-            width: 10px;
-            height: 20px;
-            display: inline-block;
-            animation: blink 1s infinite;
+        /* Sections */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Problem Statement */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .problem-card {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .problem-card h3 {
+            color: var(--accent-tertiary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glow);
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--accent-primary);
+        }
+
+        /* Use Cases */
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .use-case {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .use-case:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glow);
+        }
+
+        .use-case h3 {
+            color: var(--accent-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .use-case-query {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            background: var(--terminal-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 3px solid var(--accent-primary);
+            font-style: italic;
+        }
+
+        .use-case ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .use-case li {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .use-case li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background: var(--bg-primary);
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        /* Pricing */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-primary);
+            box-shadow: var(--glow);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-primary);
+        }
+
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-card li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .pricing-card li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+        }
+
+        /* Testimonials */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glow);
+        }
+
+        .testimonial blockquote {
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .testimonial cite {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* FAQ */
+        .faq-item {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .faq-question h3 {
+            color: var(--accent-primary);
+            margin: 0;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            padding: 3rem 2rem 2rem;
+            margin-top: 5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            text-shadow: var(--glow);
+        }
+
+        .footer-tagline {
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 100px 1rem 2rem;
+            }
+
+            .section {
+                padding: 3rem 1rem;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .terminal-body {
+                height: 400px;
+                font-size: 12px;
+            }
+        }
+
+        /* Mobile-specific enhancements */
+        .mobile-cta {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .mobile-cta a {
+            color: var(--bg-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .mobile-cta .close-cta {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--bg-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        /* Show mobile CTA on small screens */
+        @media (max-width: 768px) {
+            .mobile-cta.show {
+                display: block;
+                animation: slideUp 0.3s ease;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced terminal mobile experience */
+        @media (max-width: 480px) {
+            .terminal-header {
+                padding: 0.8rem;
+            }
+
+            .terminal-dots {
+                gap: 0.3rem;
+            }
+
+            .dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            .terminal-title {
+                font-size: 0.8rem;
+                margin-left: 0.8rem;
+            }
+        }
+
+        /* Improved focus states for accessibility */
+        .btn:focus,
+        .nav-links a:focus,
+        .nav-toggle:focus,
+        .faq-question:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Better contrast for small text */
+        @media (max-width: 768px) {
+            .output,
+            .text-muted {
+                color: #9ca3af;
+            }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
         }
 
         @keyframes blink {
@@ -295,752 +846,769 @@
             51%, 100% { opacity: 0; }
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .cursor {
+            background: var(--accent-primary);
+            animation: blink 1s infinite;
         }
 
-        /* Scroll Down Button */
-        .scroll-down-btn {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--terminal-bg);
-            border: 2px solid var(--primary-green);
-            color: var(--primary-green);
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            z-index: 1001;
+        /* Scroll animations */
+        .fade-in {
             opacity: 0;
-            animation: scrollBtnFadeIn 0.5s ease forwards, scrollBtnPulse 2s infinite;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
         }
 
-        .scroll-down-btn:hover {
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
-        }
-
-        .scroll-down-btn.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        @keyframes scrollBtnFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        @keyframes scrollBtnPulse {
-            0%, 100% { 
-                box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
-            }
-            50% { 
-                box-shadow: 0 0 50px rgba(0, 255, 65, 0.6);
-            }
-        }
-
-        .scroll-arrow {
-            font-size: 1.2rem;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-5px); }
-            60% { transform: translateY(-3px); }
-        }
-
-        /* Rest of Content */
-        .rest-content {
-            min-height: 100vh;
-            padding-top: 4rem;
-        }
-
-        /* Hero Content */
-        .hero-content {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .hero-title {
-            font-family: 'Orbitron', monospace;
-            font-size: clamp(3rem, 8vw, 8rem);
-            font-weight: 900;
-            margin-bottom: 1rem;
-            text-shadow: 
-                0 0 20px var(--primary-green),
-                0 0 40px var(--primary-green),
-                0 0 60px var(--primary-green);
-            animation: title-glow 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes title-glow {
-            from { text-shadow: 0 0 20px var(--primary-green), 0 0 40px var(--primary-green); }
-            to { text-shadow: 0 0 30px var(--primary-green), 0 0 60px var(--primary-green), 0 0 80px var(--primary-green); }
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            color: var(--secondary-cyan);
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: 600;
-        }
-
-        .hero-description {
-            font-size: 1.2rem;
-            color: #cccccc;
-            max-width: 800px;
-            margin: 0 auto 3rem;
-            line-height: 1.6;
-        }
-
-        /* Command Buttons */
-        .command-buttons {
-            display: flex;
-            gap: 2rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 3rem 0;
-        }
-
-        .cmd-button {
-            background: var(--terminal-bg);
-            border: 2px solid var(--primary-green);
-            color: var(--primary-green);
-            padding: 1rem 2rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            text-decoration: none;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cmd-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .cmd-button:hover {
-            box-shadow: 
-                0 0 30px rgba(0, 255, 65, 0.5),
-                inset 0 0 20px rgba(0, 255, 65, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .cmd-button:hover::before {
-            left: 100%;
-        }
-
-        .cmd-button.primary {
-            background: var(--primary-green);
-            color: var(--bg-dark);
-            border-color: var(--primary-green);
-        }
-
-        .cmd-button.secondary {
-            border-color: var(--secondary-cyan);
-            color: var(--secondary-cyan);
-        }
-
-        /* Mobile Optimizations */
-        @media (max-width: 768px) {
-            .terminal-header {
-                height: 50px;
-                padding: 0 1rem;
-            }
-            
-            .terminal-title {
-                font-size: 0.9rem;
-            }
-            
-            .system-info {
-                display: none;
-            }
-            
-            .nav-menu {
-                top: 50px;
-                right: 1rem;
-                left: 1rem;
-                padding: 1rem;
-            }
-            
-            .nav-menu ul {
-                flex-direction: column;
-                gap: 0.8rem;
-            }
-            
-            .nav-menu a {
-                padding: 0.8rem 1rem;
-                border: 1px solid var(--primary-green);
-                border-radius: 8px;
-                background: rgba(0, 255, 65, 0.05);
-            }
-            
-            .terminal-main {
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
-            
-            .scroll-down-btn {
-                padding: 0.8rem 1.5rem;
-                font-size: 0.9rem;
-            }
-            
-            .hero-title {
-                font-size: clamp(2.5rem, 12vw, 4rem);
-            }
-            
-            .hero-subtitle {
-                font-size: 1rem;
-                letter-spacing: 2px;
-            }
-            
-            .command-buttons {
-                flex-direction: column;
-                align-items: center;
-                gap: 1rem;
-                padding: 0 1rem;
-            }
-            
-            .cmd-button {
-                width: 100%;
-                max-width: 300px;
-                text-align: center;
-            }
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: 2px solid var(--primary-green);
-            color: var(--primary-green);
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: auto;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .nav-menu {
-                transform: translateY(-100%);
-                transition: transform 0.3s ease;
-                opacity: 0;
-                pointer-events: none;
-            }
-            
-            .nav-menu.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: auto;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 255, 65, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-green);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <div class="cyber-bg"></div>
-    <div class="grid-overlay"></div>
-    <div class="scan-lines"></div>
-
-    <!-- Fullscreen Terminal Section -->
-    <section class="fullscreen-terminal">
-        <!-- Terminal Header -->
-        <header class="terminal-header">
-            <div class="terminal-dots">
-                <div class="dot red"></div>
-                <div class="dot yellow"></div>
-                <div class="dot green"></div>
-            </div>
-            <div class="terminal-title">NTERM://NEURAL_TERMINAL_INTERFACE</div>
-            <div class="system-info">
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    <span>ONLINE</span>
-                </div>
-                <div class="status-indicator">
-                    <span>CPU: 12%</span>
-                </div>
-                <div class="status-indicator">
-                    <span>MEM: 8.2GB</span>
-                </div>
-                <div class="status-indicator">
-                    <span>AI: ACTIVE</span>
-                </div>
-            </div>
-            <!-- Mobile Menu Toggle -->
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-                ≡ MENU
-            </button>
-        </header>
-
-        <!-- Navigation -->
-        <nav class="nav-menu" id="mobileNav">
-            <ul>
-                <li><a href="#features" onclick="closeMobileMenu()">FEATURES</a></li>
-                <li><a href="#install" onclick="closeMobileMenu()">INSTALL</a></li>
-                <li><a href="#docs" onclick="closeMobileMenu()">DOCS</a></li>
-                <li><a href="#github" onclick="closeMobileMenu()">GITHUB</a></li>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="logo">nterm</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#use-cases">Use Cases</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#faq">FAQ</a></li>
             </ul>
-        </nav>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <a href="#" class="nav-cta">Get Started Free</a>
+        </div>
+    </nav>
 
-        <!-- Terminal Main Body -->
-        <div class="terminal-main" id="terminalOutput">
-            <!-- Terminal content will be dynamically typed here -->
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Turn Any Terminal Task Into An AI-Powered Workflow</h1>
+                <p>The intelligent terminal that combines multi-step reasoning with tool execution. From system administration to IoT management, nterm adapts to your expertise level and gets the job done right.</p>
+                
+                <div class="hero-features">
+                    <div class="hero-feature">Universal Expertise</div>
+                    <div class="hero-feature">Smart Execution</div>
+                    <div class="hero-feature">Any Model, Any Provider</div>
+                    <div class="hero-feature">Remote Ready</div>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">Get Started Free</a>
+                    <a href="#" class="btn btn-secondary">Watch Demo</a>
+                </div>
+            </div>
+
+            <div class="terminal-container">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">nterm - AI-Powered Terminal</div>
+                    </div>
+                    <div class="terminal-body" id="terminalBody">
+                        <!-- Content populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Scroll Down Button -->
-    <button class="scroll-down-btn" id="scrollDownBtn" onclick="scrollToContent()">
-        <span>EXPLORE MORE</span>
-        <span class="scroll-arrow">▼</span>
-    </button>
+    <!-- Problem Statement -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <h2>The Terminal Shouldn't Be A Barrier</h2>
+            <p>Whether you're a seasoned DevOps engineer or a coding bootcamp graduate, the command line can be frustrating</p>
+        </div>
 
-    <!-- Rest of Content -->
-    <div class="rest-content" id="restContent">
-        <!-- Hero Content -->
-        <section class="hero-content">
-            <h1 class="hero-title">NTERM</h1>
-            <p class="hero-subtitle">Neural Terminal Interface</p>
-            <p class="hero-description">
-                The next evolution of terminal interaction. NTerm combines reasoning from LLMs 
-                with advanced system administration capabilities, creating an intelligent assistant 
-                that understands your environment and solves problems autonomously.
-            </p>
-            
-            <div class="command-buttons">
-                <a href="#install" class="cmd-button primary">INITIALIZE SYSTEM</a>
-                <a href="#features" class="cmd-button secondary">SCAN FEATURES</a>
-                <a href="#docs" class="cmd-button">ACCESS DOCS</a>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <h3>Complex Multi-Step Tasks</h3>
+                <p>Require memorizing dozens of commands and their intricate relationships</p>
             </div>
-        </section>
+            <div class="problem-card">
+                <h3>Manual Error Handling</h3>
+                <p>When something goes wrong, you start over from scratch</p>
+            </div>
+            <div class="problem-card">
+                <h3>Documentation Gaps</h3>
+                <p>Leave you guessing at the right approach for your specific situation</p>
+            </div>
+            <div class="problem-card">
+                <h3>Context Switching</h3>
+                <p>Between terminal, docs, and Stack Overflow kills productivity</p>
+            </div>
+        </div>
 
-        <!-- Add more sections here as needed -->
-        <section style="padding: 4rem 2rem; text-align: center;">
-            <h2 style="font-family: 'Orbitron', monospace; font-size: 3rem; color: var(--primary-green); margin-bottom: 2rem;">
-                SYSTEM CAPABILITIES
-            </h2>
-            <p style="color: var(--secondary-cyan); font-size: 1.2rem; max-width: 800px; margin: 0 auto;">
-                Advanced neural processing modules for intelligent system administration, 
-                real-time monitoring, and autonomous problem resolution.
-            </p>
-        </section>
+        <div style="text-align: center; font-size: 1.3rem; color: var(--accent-primary); margin-top: 3rem;">
+            What if your terminal could think through problems with you?
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <h2>How nterm Works</h2>
+            <p>Four intelligent steps that transform complex tasks into simple conversations</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>🗣️ Intelligent Query Processing</h3>
+                <p>Describe what you want to accomplish in natural language. nterm understands your intent, regardless of your technical vocabulary.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🧠 Multi-Step AI Reasoning</h3>
+                <p>Advanced reasoning algorithms break down complex tasks into logical workflows, considering dependencies, error scenarios, and optimization opportunities.</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ Smart Tool Calling & Execution</h3>
+                <p>nterm executes commands while continuously monitoring results, adapting the approach when outputs differ from expectations.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Self-Correcting Workflows</h3>
+                <p>When something goes wrong, nterm reasons through the issue and adjusts the plan automatically—no more starting from scratch.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features -->
+    <section class="section fade-in" id="features">
+        <div class="section-header">
+            <h2>Key Features</h2>
+            <p>Everything you need for intelligent terminal automation</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>🧠 Multi-Step AI Reasoning</h3>
+                <p>Transform any AI model into a reasoning powerhouse. nterm enables chain-of-thought processing even with models that don't natively support advanced reasoning.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔧 Adaptive Tool Calling</h3>
+                <p>Dynamic workflow execution that responds to real-world conditions. When a command produces unexpected output, nterm figures out why and adapts.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🌐 Remote Integration</h3>
+                <p>Access your terminal environment from anywhere. Secure QR code or URL-based login means your AI-powered workflows follow you.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔌 Universal AI Provider Support</h3>
+                <p>Choose your preferred AI model: OpenAI, Anthropic Claude, Groq, Google Gemini, OpenRouter, Together AI, and more.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Expertise-Agnostic Design</h3>
+                <p>Whether you're managing enterprise infrastructure or learning your first Git commands, nterm meets you where you are.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔒 Security-First Architecture</h3>
+                <p>Enterprise-grade security with encrypted remote access. Your credentials, commands, and data remain protected.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="section fade-in" id="use-cases">
+        <div class="section-header">
+            <h2>Real-World Use Cases</h2>
+            <p>See how nterm transforms workflows across different domains</p>
+        </div>
+
+        <div class="use-cases-grid">
+            <div class="use-case">
+                <h3>System Administration</h3>
+                <div class="use-case-query">"Set up monitoring for our new Ubuntu servers with Prometheus and Grafana"</div>
+                <ul>
+                    <li>Plans the complete setup workflow</li>
+                    <li>Handles package dependencies automatically</li>
+                    <li>Configures monitoring dashboards</li>
+                    <li>Tests and validates the setup</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h3>DevOps & CI/CD</h3>
+                <div class="use-case-query">"Deploy our Node.js app to Kubernetes with rolling updates"</div>
+                <ul>
+                    <li>Analyzes your current deployment configuration</li>
+                    <li>Creates optimized Kubernetes manifests</li>
+                    <li>Implements blue-green deployment strategy</li>
+                    <li>Monitors rollout and handles rollbacks if needed</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h3>IoT Management</h3>
+                <div class="use-case-query">"Configure 50 Raspberry Pi devices for edge computing workloads"</div>
+                <ul>
+                    <li>Designs scalable configuration strategy</li>
+                    <li>Automates device provisioning</li>
+                    <li>Sets up secure communication channels</li>
+                    <li>Implements monitoring and update mechanisms</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h3>Development Workflows</h3>
+                <div class="use-case-query">"Set up a new React project with TypeScript, testing, and CI/CD"</div>
+                <ul>
+                    <li>Creates optimized project structure</li>
+                    <li>Configures build tools and dependencies</li>
+                    <li>Sets up testing frameworks</li>
+                    <li>Integrates with GitHub Actions or other CI systems</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h3>Database Operations</h3>
+                <div class="use-case-query">"Migrate our PostgreSQL database to a new server with minimal downtime"</div>
+                <ul>
+                    <li>Plans migration strategy with backup protocols</li>
+                    <li>Sets up replication and synchronization</li>
+                    <li>Manages the cutover process</li>
+                    <li>Validates data integrity throughout</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h3>Cloud Infrastructure</h3>
+                <div class="use-case-query">"Scale our AWS infrastructure for Black Friday traffic"</div>
+                <ul>
+                    <li>Analyzes current capacity and bottlenecks</li>
+                    <li>Implements auto-scaling policies</li>
+                    <li>Sets up load balancing and CDN</li>
+                    <li>Monitors performance and costs</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <h2>Why nterm Outperforms Traditional Terminals</h2>
+        </div>
+
+        <div class="comparison-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Traditional Terminal</th>
+                        <th>nterm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Memorize complex command sequences</td>
+                        <td>Describe what you want in natural language</td>
+                    </tr>
+                    <tr>
+                        <td>Manual error handling and debugging</td>
+                        <td>Automatic error detection and correction</td>
+                    </tr>
+                    <tr>
+                        <td>Context switching between tools and docs</td>
+                        <td>Integrated reasoning and execution</td>
+                    </tr>
+                    <tr>
+                        <td>One-size-fits-all approach</td>
+                        <td>Adapts to your expertise level</td>
+                    </tr>
+                    <tr>
+                        <td>Isolated local environment</td>
+                        <td>Secure remote access anywhere</td>
+                    </tr>
+                    <tr>
+                        <td>Single workflow, no adaptation</td>
+                        <td>Dynamic workflows that respond to real conditions</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section fade-in" id="pricing">
+        <div class="section-header">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that fits your needs</p>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Free Tier</h3>
+                <div class="price">$0<span style="font-size: 1rem; color: var(--text-muted);">/month</span></div>
+                <ul>
+                    <li>100 AI-powered workflows per month</li>
+                    <li>Access to basic reasoning capabilities</li>
+                    <li>Community support</li>
+                    <li>Single provider integration</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <h3>Professional</h3>
+                <div class="price">$29<span style="font-size: 1rem; color: var(--text-muted);">/month</span></div>
+                <ul>
+                    <li>Unlimited workflows</li>
+                    <li>Advanced multi-step reasoning</li>
+                    <li>All AI provider integrations</li>
+                    <li>Priority support</li>
+                    <li>Remote access included</li>
+                </ul>
+                <a href="#" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">Custom</div>
+                <ul>
+                    <li>Volume discounts</li>
+                    <li>Custom model integrations</li>
+                    <li>Dedicated support</li>
+                    <li>On-premise deployment options</li>
+                    <li>Advanced security features</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <h2>What Our Users Say</h2>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <blockquote>"nterm reduced our deployment time by 60% and virtually eliminated configuration errors. The AI reasoning catches issues we used to miss."</blockquote>
+                <cite>— Sarah Chen, DevOps Lead at TechFlow</cite>
+            </div>
+
+            <div class="testimonial">
+                <blockquote>"As someone new to Linux, nterm taught me best practices while getting real work done. It's like having a senior sysadmin mentoring me."</blockquote>
+                <cite>— Marcus Rodriguez, Junior Developer</cite>
+            </div>
+
+            <div class="testimonial">
+                <blockquote>"Managing thousands of edge devices used to be a nightmare. nterm's intelligent workflows make it almost effortless."</blockquote>
+                <cite>— Dr. Amanda Park, IoT Architect</cite>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section fade-in" id="faq">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Do I need a reasoning model like o3 or Claude Sonnet 4?</h3>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Not at all! nterm's reasoning engine works with any AI model, enabling chain-of-thought processing even with standard models like GPT-3.5 or basic Claude versions.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>How secure is remote access?</h3>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>nterm uses enterprise-grade encryption and authentication. Your terminal sessions are secured with the same protocols used by major cloud providers.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Can nterm work with my existing tools and workflows?</h3>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Absolutely. nterm integrates seamlessly with your current terminal environment, package managers, deployment tools, and development workflows.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>What if the AI makes a mistake?</h3>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>nterm includes safety mechanisms and confirmation steps for destructive operations. You maintain full control while benefiting from AI assistance.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>How does pricing work with different AI providers?</h3>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>You pay for nterm's reasoning and orchestration capabilities. AI provider costs (like OpenAI API usage) are separate and billed directly by the provider.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer CTA -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <h2>Ready to Transform Your Terminal Experience?</h2>
+            <p>Join thousands of developers, sysadmins, and DevOps engineers who've already discovered the power of AI-assisted command line workflows.</p>
+        </div>
+
+        <div class="footer-buttons">
+            <a href="#" class="btn btn-primary">Start Free Trial - No Credit Card Required</a>
+            <a href="#" class="btn btn-secondary">Schedule Demo</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">nterm</div>
+            <div class="footer-tagline">Where AI meets the command line</div>
+            
+            <div class="footer-buttons">
+                <a href="#" class="btn btn-secondary">View Documentation</a>
+                <a href="#" class="btn btn-secondary">Join Community</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile CTA -->
+    <div class="mobile-cta" id="mobileCta">
+        <button class="close-cta" onclick="hideMobileCta()">&times;</button>
+        <a href="#">Start Free Trial - Transform Your Terminal!</a>
     </div>
 
     <script>
-        // Terminal Commands and Outputs
-        const terminalSequence = [
+        // Terminal Animation
+        // Terminal Animation with Mobile Adaptation
+        const scenarios = [
             {
-                type: 'prompt',
-                content: 'nterm --initialize',
-                delay: 1000
+                title: "DevOps Deployment",
+                steps: [
+                    { type: 'prompt', text: '$ nterm ' },
+                    { type: 'user-input', text: window.innerWidth <= 480 ? '"Deploy Node.js app to K8s"' : '"Deploy our Node.js app to Kubernetes with zero downtime"' },
+                    { type: 'ai-thinking', text: '🤔 AI Thinking: Analyzing current deployment... Need rolling update strategy...' },
+                    { type: 'ai-planning', text: '📋 Planning: 1) Build Docker image 2) Update manifests 3) Rolling deployment 4) Health checks' },
+                    { type: 'ai-executing', text: '⚡ Executing: docker build -t myapp:v2.1.0 .' },
+                    { type: 'output', text: '   Successfully built image myapp:v2.1.0' },
+                    { type: 'ai-executing', text: '⚡ Executing: kubectl set image deployment/myapp container=myapp:v2.1.0' },
+                    { type: 'output', text: '   deployment.apps/myapp image updated' },
+                    { type: 'ai-executing', text: '⚡ Monitoring: kubectl rollout status deployment/myapp' },
+                    { type: 'success', text: '✅ Deployment completed successfully! Zero downtime achieved.' }
+                ]
             },
             {
-                type: 'output',
-                content: 'Initializing Nirvana Terminal: NTerm...',
-                class: 'success',
-                delay: 800
+                title: "System Administration",
+                steps: [
+                    { type: 'prompt', text: '$ nterm ' },
+                    { type: 'user-input', text: window.innerWidth <= 480 ? '"Setup server monitoring"' : '"Set up monitoring for our Ubuntu servers"' },
+                    { type: 'ai-thinking', text: '🤔 AI Thinking: Need Prometheus + Grafana stack... Checking system requirements...' },
+                    { type: 'ai-planning', text: '📋 Planning: 1) Install Prometheus 2) Configure targets 3) Install Grafana 4) Setup dashboards' },
+                    { type: 'ai-executing', text: '⚡ Executing: sudo apt update && sudo apt install prometheus' },
+                    { type: 'output', text: '   Prometheus installed successfully' },
+                    { type: 'ai-executing', text: '⚡ Executing: sudo systemctl enable prometheus grafana-server' },
+                    { type: 'output', text: '   Services enabled and started' },
+                    { type: 'success', text: '✅ Monitoring stack ready! Grafana available at :3000' }
+                ]
             },
             {
-                type: 'output',
-                content: '✓ AI reasoning engine loaded',
-                class: 'success',
-                delay: 600
+                title: "Development Setup",
+                steps: [
+                    { type: 'prompt', text: '$ nterm ' },
+                    { type: 'user-input', text: window.innerWidth <= 480 ? '"Create React + TypeScript project"' : '"Create a new React project with TypeScript and testing"' },
+                    { type: 'ai-thinking', text: '🤔 AI Thinking: Modern React setup... Need Vite, TypeScript, Vitest, ESLint...' },
+                    { type: 'ai-planning', text: '📋 Planning: 1) Create Vite project 2) Configure TypeScript 3) Setup testing 4) Add CI/CD' },
+                    { type: 'ai-executing', text: '⚡ Executing: npm create vite@latest my-app -- --template react-ts' },
+                    { type: 'output', text: '   Project created with TypeScript template' },
+                    { type: 'ai-executing', text: '⚡ Executing: npm install && npm install -D vitest @testing-library/react' },
+                    { type: 'output', text: '   Dependencies installed' },
+                    { type: 'success', text: '✅ React project ready with TypeScript and testing configured!' }
+                ]
             },
             {
-                type: 'output',
-                content: '✓ System integration complete',
-                class: 'success',
-                delay: 500
-            },
-            {
-                type: 'output',
-                content: '🧠 NTerm v2.0.1 - Neural Terminal Interface',
-                class: 'info',
-                delay: 1000
-            },
-            {
-                type: 'prompt',
-                content: 'nterm "What\'s consuming my memory?"',
-                delay: 1500
-            },
-            {
-                type: 'output',
-                content: '🔍 Analyzing memory consumption patterns...',
-                class: '',
-                delay: 1200
-            },
-            {
-                type: 'output',
-                content: '⚠️  Chrome: 4.2GB (73 tabs open)',
-                class: 'warning',
-                delay: 800
-            },
-            {
-                type: 'output',
-                content: '📊 Docker: 1.8GB (6 containers)',
-                class: 'info',
-                delay: 600
-            },
-            {
-                type: 'output',
-                content: '🔧 VSCode: 890MB (4 workspaces)',
-                class: 'info',
-                delay: 600
-            },
-            {
-                type: 'output',
-                content: '💡 Recommendation: Close unused Chrome tabs, restart container \'redis-dev\'',
-                class: 'success',
-                delay: 1000
-            },
-            {
-                type: 'output',
-                content: '🤖 Would you like me to optimize memory usage automatically? [Y/n]',
-                class: '',
-                delay: 1500
-            },
-            {
-                type: 'prompt',
-                content: 'nterm "Monitor my IoT devices"',
-                delay: 2000
-            },
-            {
-                type: 'output',
-                content: '🌐 Scanning network for IoT devices...',
-                class: '',
-                delay: 1000
-            },
-            {
-                type: 'output',
-                content: '✓ Smart Thermostat (192.168.1.45) - 72°F, Normal',
-                class: 'success',
-                delay: 700
-            },
-            {
-                type: 'output',
-                content: '⚠️ Security Camera (192.168.1.67) - High CPU usage',
-                class: 'warning',
-                delay: 700
-            },
-            {
-                type: 'output',
-                content: '✓ Smart Lights (192.168.1.23-26) - All responsive',
-                class: 'success',
-                delay: 700
-            },
-            {
-                type: 'output',
-                content: '❌ Garage Sensor (192.168.1.89) - Connection timeout',
-                class: 'error',
-                delay: 700
-            },
-            {
-                type: 'output',
-                content: '🔧 Running diagnostic on garage sensor...',
-                class: '',
-                delay: 1200
-            },
-            {
-                type: 'prompt',
-                content: 'nterm "Deploy latest updates safely"',
-                delay: 2000
-            },
-            {
-                type: 'output',
-                content: '🚀 Initiating safe deployment protocol...',
-                class: '',
-                delay: 1000
-            },
-            {
-                type: 'output',
-                content: '🔍 Running pre-deployment health checks...',
-                class: 'info',
-                delay: 800
-            },
-            {
-                type: 'output',
-                content: '✓ All services healthy',
-                class: 'success',
-                delay: 600
-            },
-            {
-                type: 'output',
-                content: '🔄 Creating backup snapshot...',
-                class: 'info',
-                delay: 800
-            },
-            {
-                type: 'output',
-                content: '✓ Backup completed: snap_2025-06-21_14:32:18',
-                class: 'success',
-                delay: 600
-            },
-            {
-                type: 'output',
-                content: '🚀 Deploying updates with zero downtime...',
-                class: 'info',
-                delay: 1200
-            },
-            {
-                type: 'output',
-                content: '✅ Deployment successful! All systems operational.',
-                class: 'success',
-                delay: 1000
-            },
-            {
-                type: 'cursor',
-                content: '',
-                delay: 500
+                title: "IoT Management",
+                steps: [
+                    { type: 'prompt', text: '$ nterm ' },
+                    { type: 'user-input', text: window.innerWidth <= 480 ? '"Configure 20 Pi devices"' : '"Configure 20 Raspberry Pi devices for edge computing"' },
+                    { type: 'ai-thinking', text: '🤔 AI Thinking: Need automated provisioning... SSH keys, Docker, monitoring agents...' },
+                    { type: 'ai-planning', text: '📋 Planning: 1) Generate SSH keys 2) Deploy Docker 3) Install edge runtime 4) Setup monitoring' },
+                    { type: 'ai-executing', text: window.innerWidth <= 480 ? '⚡ Executing: ansible-playbook setup-pi.yml' : '⚡ Executing: for i in {1..20}; do ssh pi@192.168.1.$i "curl -sSL https://get.docker.com | sh"; done' },
+                    { type: 'output', text: '   Docker installed on 20/20 devices' },
+                    { type: 'ai-executing', text: '⚡ Executing: ansible-playbook -i inventory edge-setup.yml' },
+                    { type: 'output', text: '   Edge runtime deployed successfully' },
+                    { type: 'success', text: '✅ All 20 Pi devices configured and ready for edge workloads!' }
+                ]
             }
         ];
 
+        let currentScenario = 0;
         let currentStep = 0;
         let isTyping = false;
 
-        // Typewriter effect function with cursor
-        function typeWriter(element, text, speed = 50) {
-            return new Promise((resolve) => {
-                let i = 0;
-                isTyping = true;
-                
-                function type() {
-                    if (i < text.length) {
-                        // Add the character and cursor
-                        element.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
-                        i++;
-                        setTimeout(type, speed);
-                    } else {
-                        // Remove cursor when done typing
-                        element.innerHTML = text;
-                        isTyping = false;
-                        resolve();
-                    }
-                }
-                type();
-            });
+        function clearTerminal() {
+            document.getElementById('terminalBody').innerHTML = '';
         }
 
-        // Create terminal line
-        function createTerminalLine(type, content, className = '') {
+        function addLine(content, className = '') {
+            const terminalBody = document.getElementById('terminalBody');
             const line = document.createElement('div');
-            
-            if (type === 'prompt') {
-                line.className = 'prompt-line';
-                line.innerHTML = `
-                    <span class="prompt">❯</span>
-                    <span class="command"></span>
-                `;
-                return line;
-            } else if (type === 'output') {
-                line.className = `output ${className}`;
-                line.innerHTML = ''; // Start empty for typing effect
-                return line;
-            } else if (type === 'cursor') {
-                line.className = 'prompt-line';
-                line.innerHTML = `
-                    <span class="prompt">❯</span>
-                    <span class="cursor"></span>
-                `;
-                return line;
-            }
+            line.className = `terminal-line ${className}`;
+            line.innerHTML = content;
+            terminalBody.appendChild(line);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+            return line;
         }
 
-        // Execute terminal sequence
-        async function executeTerminalSequence() {
-            const terminal = document.getElementById('terminalOutput');
-            
-            for (let i = 0; i < terminalSequence.length; i++) {
-                const step = terminalSequence[i];
-                
-                // Wait for the delay
-                await new Promise(resolve => setTimeout(resolve, step.delay));
-                
-                // Create the line
-                const line = createTerminalLine(step.type, step.content, step.class);
-                terminal.appendChild(line);
-                
-                // Type the content
-                if (step.type === 'prompt') {
-                    const commandSpan = line.querySelector('.command');
-                    await typeWriter(commandSpan, step.content, 80);
-                } else if (step.type === 'output') {
-                    await typeWriter(line, step.content, 30);
-                } else if (step.type === 'cursor') {
-                    // Just show the cursor, no typing needed
+        function typeText(element, text, callback, speed = 25) {
+            isTyping = true;
+            let i = 0;
+            const timer = setInterval(() => {
+                element.innerHTML += text[i];
+                i++;
+                if (i >= text.length) {
+                    clearInterval(timer);
+                    isTyping = false;
+                    if (callback) setTimeout(callback, 200);
                 }
-                
-                // Scroll to bottom
-                terminal.scrollTop = terminal.scrollHeight;
-                
-                currentStep = i + 1;
-            }
+            }, speed);
         }
 
-        // Mobile Menu Functions
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileNav');
-            menu.classList.toggle('active');
-        }
-        
-        function closeMobileMenu() {
-            const menu = document.getElementById('mobileNav');
-            menu.classList.remove('active');
-        }
-
-        // Scroll to content function
-        function scrollToContent() {
-            const restContent = document.getElementById('restContent');
-            restContent.scrollIntoView({ behavior: 'smooth' });
+        function showBrailleLoader(element, duration, callback) {
+            const brailleChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+            let currentChar = 0;
+            const originalText = element.innerHTML;
             
-            // Hide scroll button
-            const scrollBtn = document.getElementById('scrollDownBtn');
-            scrollBtn.classList.add('hidden');
-        }
-
-        // Show scroll button after delay
-        function showScrollButton() {
+            const loaderInterval = setInterval(() => {
+                element.innerHTML = originalText + ' ' + brailleChars[currentChar];
+                currentChar = (currentChar + 1) % brailleChars.length;
+            }, 80);
+            
             setTimeout(() => {
-                const scrollBtn = document.getElementById('scrollDownBtn');
-                scrollBtn.style.display = 'flex';
-                setTimeout(() => {
-                    scrollBtn.style.opacity = '1';
-                }, 100);
-            }, 5000);
+                clearInterval(loaderInterval);
+                element.innerHTML = originalText;
+                if (callback) callback();
+            }, duration);
         }
 
-        // Hide scroll button when user scrolls past first section
-        function handleScroll() {
-            const scrollBtn = document.getElementById('scrollDownBtn');
-            const fullscreenTerminal = document.querySelector('.fullscreen-terminal');
+        function runScenario() {
+            const scenario = scenarios[currentScenario];
             
-            if (window.scrollY > fullscreenTerminal.offsetHeight * 0.8) {
-                scrollBtn.classList.add('hidden');
-            } else if (currentStep >= terminalSequence.length - 1) {
-                scrollBtn.classList.remove('hidden');
+            if (currentStep === 0) {
+                clearTerminal();
+                addLine(`<span class="ai-thinking"># ${scenario.title} Demo</span>`);
+                addLine('');
             }
-        }
 
-        // System info updates
-        function updateSystemInfo() {
-            if (window.innerWidth > 768) {
-                const cpuElement = document.querySelector('.system-info .status-indicator:nth-child(2) span');
-                const memElement = document.querySelector('.system-info .status-indicator:nth-child(3) span');
+            if (currentStep < scenario.steps.length) {
+                const step = scenario.steps[currentStep];
+                const line = addLine('', step.type);
                 
-                if (cpuElement && memElement) {
-                    const cpu = Math.floor(Math.random() * 20 + 5);
-                    const mem = (Math.random() * 2 + 7).toFixed(1);
-                    
-                    cpuElement.textContent = `CPU: ${cpu}%`;
-                    memElement.textContent = `MEM: ${mem}GB`;
+                if (step.type === 'prompt') {
+                    line.innerHTML = `<span class="prompt">${step.text}</span>`;
+                    setTimeout(() => {
+                        currentStep++;
+                        runScenario();
+                    }, 300);
+                } else if (step.type === 'user-input') {
+                    const promptSpan = line.previousElementSibling;
+                    typeText(promptSpan, step.text, () => {
+                        addLine('');
+                        currentStep++;
+                        runScenario();
+                    }, 15);
+                } else if (step.type === 'ai-thinking') {
+                    typeText(line, step.text, () => {
+                        showBrailleLoader(line, 1200, () => {
+                            currentStep++;
+                            runScenario();
+                        });
+                    }, 20);
+                } else {
+                    typeText(line, step.text, () => {
+                        currentStep++;
+                        runScenario();
+                    }, step.type === 'ai-planning' ? 15 : 12);
                 }
+            } else {
+                setTimeout(() => {
+                    currentScenario = (currentScenario + 1) % scenarios.length;
+                    currentStep = 0;
+                    setTimeout(runScenario, 1500);
+                }, 2000);
             }
         }
 
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const menu = document.getElementById('mobileNav');
-            const toggle = document.querySelector('.mobile-menu-toggle');
+        // Mobile Navigation
+        function initMobileNav() {
+            const navToggle = document.getElementById('navToggle');
+            const navLinks = document.getElementById('navLinks');
             
-            if (!menu.contains(event.target) && !toggle.contains(event.target)) {
-                menu.classList.remove('active');
-            }
-        });
+            navToggle.addEventListener('click', () => {
+                navToggle.classList.toggle('active');
+                navLinks.classList.toggle('mobile');
+                navLinks.classList.toggle('active');
+            });
 
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    const headerOffset = window.innerWidth <= 768 ? 80 : 120;
-                    const elementPosition = target.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
+            // Close mobile nav when clicking on links
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navToggle.classList.remove('active');
+                    navLinks.classList.remove('mobile', 'active');
+                });
+            });
+
+            // Close mobile nav when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    navToggle.classList.remove('active');
+                    navLinks.classList.remove('mobile', 'active');
                 }
             });
-        });
 
-        // Initialize everything when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Start terminal sequence
-            executeTerminalSequence();
-            
-            // Show scroll button after delay
-            showScrollButton();
-            
-            // Add scroll listener
-            window.addEventListener('scroll', handleScroll);
-            
-            // Update system info periodically (desktop only)
-            if (window.innerWidth > 768) {
-                setInterval(updateSystemInfo, 3000);
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 1024) {
+                    navToggle.classList.remove('active');
+                    navLinks.classList.remove('mobile', 'active');
+                }
+            });
+        }
+
+        // Enhanced smooth scrolling for mobile
+        function smoothScrollTo(target) {
+            const element = document.querySelector(target);
+            if (element) {
+                const offsetTop = element.offsetTop - 80; // Account for fixed nav
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
             }
-        });
+        }
 
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            // Recheck mobile optimizations if needed
+        // Initialize smooth scrolling for nav links
+        function initSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = this.getAttribute('href');
+                    if (target !== '#') {
+                        smoothScrollTo(target);
+                    }
+                });
+            });
+        }
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.faq-question span').textContent = '+';
+            });
+            
+            // Open clicked item if it wasn't active
+            if (!isActive) {
+                faqItem.classList.add('active');
+                element.querySelector('span').textContent = '−';
+            }
+        }
+
+        // Mobile CTA Management
+        let mobileCTAShown = false;
+        let mobileCTAHidden = false;
+
+        function showMobileCTA() {
+            if (!mobileCTAShown && !mobileCTAHidden && window.innerWidth <= 768) {
+                const mobileCta = document.getElementById('mobileCta');
+                mobileCta.classList.add('show');
+                mobileCTAShown = true;
+            }
+        }
+
+        function hideMobileCta() {
+            const mobileCta = document.getElementById('mobileCta');
+            mobileCta.classList.remove('show');
+            mobileCTAHidden = true;
+            mobileCTAShown = false;
+        }
+
+        // Enhanced scroll animations with mobile CTA trigger
+        function handleScrollAnimations() {
+            const elements = document.querySelectorAll('.fade-in');
+            const scrollPosition = window.scrollY;
+            
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+
+            // Show mobile CTA after scrolling past hero
+            if (scrollPosition > window.innerHeight * 0.5) {
+                showMobileCTA();
+            }
+        }
+
+        // Touch-friendly terminal interaction
+        function enhanceTerminalForMobile() {
+            const terminal = document.querySelector('.terminal');
+            if (terminal && window.innerWidth <= 768) {
+                // Add touch feedback
+                terminal.style.cursor = 'default';
+                
+                // Prevent zoom on double tap
+                terminal.addEventListener('touchstart', function(e) {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                });
+
+                let lastTouchEnd = 0;
+                terminal.addEventListener('touchend', function(e) {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        e.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+            }
+        }
+
+        // Initialize
+        setTimeout(runScenario, 1000);
+        window.addEventListener('scroll', handleScrollAnimations);
+        handleScrollAnimations(); // Run once on load
+        
+        // Initialize mobile features
+        document.addEventListener('DOMContentLoaded', () => {
+            initMobileNav();
+            initSmoothScrolling();
+            enhanceTerminalForMobile();
         });
     </script>
 </body>
