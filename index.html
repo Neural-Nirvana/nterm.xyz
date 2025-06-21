@@ -1346,11 +1346,7 @@
         </div>
     </footer>
 
-    <!-- Mobile CTA -->
-    <div class="mobile-cta" id="mobileCta">
-        <button class="close-cta" onclick="hideMobileCta()">×</button>
-        <a href="#">Start Free Trial - Transform Your Terminal!</a>
-    </div>
+    <!-- Mobile CTA Removed -->
 
     <script>
         // Terminal Animation
@@ -1589,26 +1585,7 @@
             }
         }
 
-        // Mobile CTA Management
-        let mobileCTAShown = false;
-        let mobileCTAHidden = false;
-
-        function showMobileCTA() {
-            if (!mobileCTAShown && !mobileCTAHidden && window.innerWidth <= 768) {
-                const mobileCta = document.getElementById('mobileCta');
-                mobileCta.classList.add('show');
-                mobileCTAShown = true;
-            }
-        }
-
-        function hideMobileCta() {
-            const mobileCta = document.getElementById('mobileCta');
-            mobileCta.classList.remove('show');
-            mobileCTAHidden = true;
-            mobileCTAShown = false;
-        }
-
-        // Enhanced scroll animations with mobile CTA trigger
+        // Enhanced scroll animations
         function handleScrollAnimations() {
             const elements = document.querySelectorAll('.fade-in');
             const scrollPosition = window.scrollY;
@@ -1657,6 +1634,7 @@
         setTimeout(runScenario, 1000);
         window.addEventListener('scroll', handleScrollAnimations);
         handleScrollAnimations(); // Run once on load
+        // Removed mobile CTA initialization
         
         // Initialize mobile features
         document.addEventListener('DOMContentLoaded', () => {
