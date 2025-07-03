@@ -1003,8 +1003,8 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1>AI-Powered Terminal</h1>
-                <h3>Turn Every Command-Line Task Into an Intelligent Workflow</h3>
+                <h1>Terminal That Thinks</h1>
+                <h3>Try Command-Line Tasks with an Intelligent Partner</h3>
                 <p>nterm is an intelligent terminal that combines multi-step reasoning with tool execution. From system administration to IoT management, nterm adapts to your expertise level and gets the job done right.</p>
                 
                 <div class="hero-features">
@@ -1040,13 +1040,495 @@
         </div>
     </section>
 
-    <!-- Problem Statement -->
-    <section class="section fade-in">
-        <div class="section-header">
-            <h2>The Terminal Shouldn't Be A Barrier</h2>
-            <p>Whether you're a seasoned DevOps engineer or a coding bootcamp graduate, the command line can be frustrating</p>
+
+
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --accent-primary: #00ff88;
+            --accent-secondary: #00d4ff;
+            --accent-tertiary: #ff6b6b;
+            --text-primary: #ffffff;
+            --text-secondary: #b4bcd0;
+            --text-muted: #6b7280;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Context Engineering Section */
+        .context-engineering {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .context-engineering::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .context-engineering-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .context-engineering-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .context-engineering-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            box-shadow: var(--glow);
+        }
+
+        .context-engineering-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .context-explanation {
+            padding: 2rem;
+        }
+
+        .context-explanation h3 {
+            font-size: 1.8rem;
+            color: var(--accent-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .context-explanation p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .context-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .context-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .context-features li::before {
+            content: "🧠";
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .context-features li strong {
+            color: var(--accent-primary);
+            margin-right: 0.5rem;
+        }
+
+        /* Pyramid Visualization */
+        .pyramid-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            margin: 0 auto;
+            perspective: 1000px;
+        }
+
+        .pyramid {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .pyramid-layer {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pyramid-layer:hover {
+            transform: translateX(-50%) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .layer-1 {
+            top: 0;
+            width: 280px;
+            height: 60px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+        }
+
+        .layer-2 {
+            top: 80px;
+            width: 320px;
+            height: 65px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .layer-3 {
+            top: 165px;
+            width: 360px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent-secondary), #0284c7);
+        }
+
+        .layer-4 {
+            top: 255px;
+            width: 400px;
+            height: 75px;
+            background: linear-gradient(135deg, var(--accent-primary), #059669);
+        }
+
+        .layer-5 {
+            top: 350px;
+            width: 440px;
+            height: 80px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .layer-arrow {
+            position: absolute;
+            right: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .pyramid-layer:hover .layer-arrow {
+            opacity: 1;
+        }
+
+        .layer-description {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-width: 200px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .pyramid-layer:hover .layer-description {
+            opacity: 1;
+            transform: translateY(-50%) translateX(10px);
+        }
+
+        .layer-description h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--accent-primary);
+            font-size: 1rem;
+        }
+
+        .layer-description p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .context-engineering-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .pyramid-container {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .context-engineering {
+                padding: 3rem 1rem;
+            }
+            
+            .context-engineering-header h2 {
+                font-size: 2rem;
+            }
+            
+            .pyramid-container {
+                height: 400px;
+            }
+            
+            .pyramid-layer {
+                font-size: 0.9rem;
+            }
+            
+            .layer-1 { width: 200px; height: 50px; }
+            .layer-2 { width: 230px; height: 55px; }
+            .layer-3 { width: 260px; height: 60px; }
+            .layer-4 { width: 290px; height: 65px; }
+            .layer-5 { width: 320px; height: 70px; }
+            
+            .layer-description {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 1000;
+                width: 90%;
+                max-width: 300px;
+            }
+        }
+
+        /* CTA Section */
+        .context-cta {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .context-cta h3 {
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        .context-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            box-shadow: var(--glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.4);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Context Engineering Section -->
+    <section class="context-engineering fade-in">
+        <div class="context-engineering-header">
+            <!-- <div class="premium-badge">SaaS & Enterprise Only</div> -->
+            <h2>Advanced Context Engineering</h2>
+            <p>The evolution of prompt engineering. nterm designs the entire context your AI sees, not just the prompt.</p>
         </div>
 
+        <div class="context-engineering-content">
+            <div class="context-explanation">
+                <h3>Beyond Simple Prompting</h3>
+                <p>While basic terminals rely on simple prompts, nterm employs sophisticated context engineering to create truly intelligent workflows.</p>
+                
+                <p>It's the art and science of filling the context window with just the right information for each step of your workflow.</p>
+
+                <ul class="context-features">
+                    <li><strong>System Intelligence:</strong> Dynamic system messages that adapt to your environment</li>
+                    <li><strong>Memory Persistence:</strong> Maintains context across sessions and complex workflows</li>
+                    <li><strong>Tool Integration:</strong> Seamlessly incorporates tool outputs into reasoning chains</li>
+                    <li><strong>Adaptive Behavior:</strong> Personalizes responses based on your expertise level</li>
+                </ul>
+
+                <div class="context-cta">
+                    <h3>Experience the Difference</h3>
+                    <p>See how context engineering transforms simple commands into intelligent, multi-step workflows that understand your goals.</p>
+                    <a href="#" class="btn btn-primary">Start Free Trial</a>
+                </div>
+            </div>
+
+            <div class="pyramid-container">
+                <div class="pyramid">
+                    <div class="pyramid-layer layer-1">
+                        <span>Guardrails & Parallelism</span>
+                        <div class="layer-arrow">→</div>
+                        <div class="layer-description">
+                            <h4>Safety & Efficiency</h4>
+                            <p>Intelligent guardrails prevent harmful operations while enabling parallel execution for faster workflows.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pyramid-layer layer-2">
+                        <span>Verification Loops</span>
+                        <div class="layer-arrow">→</div>
+                        <div class="layer-description">
+                            <h4>Continuous Validation</h4>
+                            <p>Self-correcting systems that verify each step and automatically adapt when things don't go as planned.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pyramid-layer layer-3">
+                        <span>Model Selection</span>
+                        <div class="layer-arrow">→</div>
+                        <div class="layer-description">
+                            <h4>Dynamic AI Routing</h4>
+                            <p>Automatically selects the best AI model for each specific task, optimizing for accuracy and cost.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pyramid-layer layer-4">
+                        <span>Control Flows</span>
+                        <div class="layer-arrow">→</div>
+                        <div class="layer-description">
+                            <h4>Intelligent Orchestration</h4>
+                            <p>Sophisticated branching logic that handles complex decision trees and conditional workflows.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pyramid-layer layer-5">
+                        <span>Context Foundation</span>
+                        <div class="layer-arrow">→</div>
+                        <div class="layer-description">
+                            <h4>Smart Context Management</h4>
+                            <p>Determines what information belongs where in the context window for maximum effectiveness.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Scroll animations
+        function handleScrollAnimations() {
+            const elements = document.querySelectorAll('.fade-in');
+            
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('scroll', handleScrollAnimations);
+        handleScrollAnimations(); // Run once on load
+
+        // Track interactions for analytics
+        document.querySelectorAll('.pyramid-layer').forEach(layer => {
+            layer.addEventListener('mouseenter', function() {
+                const layerName = this.querySelector('span').textContent;
+                // Track layer hover for analytics
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'context_layer_hover', {
+                        'event_category': 'engagement',
+                        'event_label': layerName
+                    });
+                }
+            });
+        });
+    </script>
+        <!-- Problem Statement -->
+    <section class="section fade-in">
+            <div class="section-header">
+                <h2>The Terminal Shouldn't Be A Barrier</h2>
+                <p>Whether you're a seasoned DevOps engineer or a coding bootcamp graduate, the command line can be frustrating</p>
+            </div>
+        </section>
+    <section class="section fade-in">
         <div class="problem-grid">
             <div class="problem-card">
                 <h3>Complex Multi-Step Tasks</h3>
@@ -1097,6 +1579,7 @@
             </div>
         </div>
     </section>
+
 
     <!-- Key Features -->
     <section class="section fade-in" id="features">
